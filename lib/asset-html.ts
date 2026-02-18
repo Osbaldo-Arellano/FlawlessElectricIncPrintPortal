@@ -150,6 +150,42 @@ function qrSvg(url: string): string {
   return qr.createSvgTag({ scalable: true, margin: 1 });
 }
 
+/**
+ * Five filled 5-pointed stars as a self-contained inline SVG.
+ * Uses pure geometry — no font or glyph dependency — so it renders correctly
+ * in every context: email clients, Puppeteer PDF, srcDoc iframes, browsers.
+ *
+ * Math: outer radius R = size/2, inner radius r = R*0.38 (classic star proportion).
+ * 10 path points per star alternating outer/inner at 36° increments, starting at -90°.
+ */
+function fiveStarsSvg(size: number, color: string): string {
+  const R  = size / 2;
+  const r  = R * 0.38;
+  const cx = R;
+  const cy = R;
+  const gap   = Math.ceil(size * 0.14);
+  const step  = size + gap;
+  const totalW = 5 * size + 4 * gap;
+
+  function starPath(offsetX: number): string {
+    const pts: string[] = [];
+    for (let k = 0; k < 5; k++) {
+      const outerA = Math.PI * (-0.5 + (2 * k) / 5);
+      const innerA = Math.PI * (-0.5 + (2 * k + 1) / 5);
+      pts.push(
+        `${(offsetX + cx + R * Math.cos(outerA)).toFixed(2)},${(cy + R * Math.sin(outerA)).toFixed(2)}`,
+        `${(offsetX + cx + r * Math.cos(innerA)).toFixed(2)},${(cy + r * Math.sin(innerA)).toFixed(2)}`,
+      );
+    }
+    return `M${pts.join("L")}Z`;
+  }
+
+  const paths = [0, 1, 2, 3, 4]
+    .map((i) => `<path fill="${color}" d="${starPath(i * step)}"/>`)
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${size}" viewBox="0 0 ${totalW} ${size}" aria-label="5 stars">${paths}</svg>`;
+}
+
 /** Resolve logo/icon src: prefer dynamic brand asset, fall back to static data URI. */
 function assets(opts: GenerateOptions) {
   const { l } = themeFor(opts.templateId);
@@ -301,7 +337,6 @@ function googleReviewCard(templateId: string): GenFn {
       /* CTA zone — column, centered. Margin on individual elements controls hierarchy spacing:
          stars → headline gets 8 px (cross-group), headline → subhead gets 3 px (within-group) */
       .gr-cta { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-      .gr-stars { color:${STAR_COLOR}; font-size:22px; letter-spacing:2px; line-height:1; }
       .gr-headline { font-size:12px; font-weight:800; letter-spacing:0.04em; color:${c.name}; margin-top:8px; }
       .gr-subhead  { font-size:9px;  font-weight:400; color:${c.secondary}; margin-top:3px; }
       /* Flip hint — 8 px minimum for readable print, anchors to bottom */
@@ -311,8 +346,7 @@ function googleReviewCard(templateId: string): GenFn {
       /* Three elements only — stars prime the action, QR is the hero, text confirms.
          Math: 14 + 8 + 106 + 8 + 10 = 146 px in 152 px content area (20 px padding). */
       .gr-back { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; }
-      /* Stars above QR prime the "I'm rating something" mindset before the action */
-      .gr-back-stars { color:${STAR_COLOR}; font-size:14px; letter-spacing:2px; line-height:1; }
+      /* Stars above QR: SVG geometry — no font/glyph dependency, safe in email */
       /* QR is the hero — sized to dominate without overflowing */
       .gr-qr { width:106px; height:106px; }
       .gr-qr svg { width:100%; height:100%; display:block; }
@@ -326,7 +360,7 @@ function googleReviewCard(templateId: string): GenFn {
         <div class="gr-accent"></div>
       </div>
       <div class="gr-cta">
-        <div class="gr-stars">★★★★★</div>
+        ${fiveStarsSvg(22, STAR_COLOR)}
         <div class="gr-headline">${headline}</div>
         <div class="gr-subhead">${subhead}</div>
       </div>
@@ -336,7 +370,7 @@ function googleReviewCard(templateId: string): GenFn {
     const qrPlaceholder = `<div style="width:106px;height:106px;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:8px;color:#aaa;text-align:center;line-height:1.4;">Enter Google<br>Review Link</div>`;
 
     const backHTML = `<div class="gr-back">
-      <div class="gr-back-stars">★★★★★</div>
+      ${fiveStarsSvg(14, STAR_COLOR)}
       <div class="gr-qr">${qr || qrPlaceholder}</div>
       <div class="gr-scan-text">${scanText}</div>
     </div>`;
