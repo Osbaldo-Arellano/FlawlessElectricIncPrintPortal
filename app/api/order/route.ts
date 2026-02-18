@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { html, filename } = await req.json();
+  const { html, filename, quantity } = await req.json();
 
   if (!html || typeof html !== "string") {
     return new Response("Missing html", { status: 400 });
@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
   await transporter.sendMail({
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: ORDER_EMAIL,
-    subject: `New Order: ${safeName}`,
-    text: `New order from ${userName}.\n\nAsset: ${safeName}\n\nThe PDF is attached.`,
+    subject: `New Order: ${safeName} (x${quantity || "?"})`,
+    text: `New order from ${userName}.\n\nAsset: ${safeName}\nQuantity: ${quantity || "Not specified"}\n\nThe PDF is attached.`,
     attachments: [
       {
         filename: `${safeName}.pdf`,

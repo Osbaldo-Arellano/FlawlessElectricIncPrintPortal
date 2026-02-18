@@ -33,6 +33,7 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
   const [fields, setFields] = useState<Record<string, string>>({});
   const [zoom, setZoom] = useState(1);
   const [orderSent, setOrderSent] = useState(false);
+  const [quantity, setQuantity] = useState("100");
 
   // Seed fields from brand state when opening
   useEffect(() => {
@@ -135,6 +136,7 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
         body: JSON.stringify({
           html: orderHTML,
           filename: `${asset.id}-${template.id}`,
+          quantity,
         }),
       });
 
@@ -168,6 +170,21 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
             </span>
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-zinc-400">Qty</label>
+              <select
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs text-zinc-100 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+                <option value="500">500</option>
+                <option value="1000">1,000</option>
+              </select>
+            </div>
             <button
               onClick={handleOrder}
               disabled={generating || requiredMissing || orderSent}
