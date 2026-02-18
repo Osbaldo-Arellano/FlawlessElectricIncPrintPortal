@@ -1,3 +1,4 @@
+import qrcode from "qrcode-generator";
 import type { AssetTypeConfig } from "@/types/assets";
 
 // Print-safe CMYK-friendly colors
@@ -43,6 +44,7 @@ interface GenerateOptions {
   logo: string | null;   // wide/horizontal logo — falls back to static if null
   icon: string | null;   // square brand mark — falls back to static if null
   tagline: string;       // from brand.tagline; used by all templates
+  website?: string;      // from brand.website; encoded into QR code on business cards
   dark?: boolean;
   /** For multi-page assets (business cards): render only "front" or "back". Omit for full document. */
   page?: "front" | "back";
@@ -94,6 +96,20 @@ ${css}
 </style></head><body>${body}</body></html>`;
 }
 
+/** Like wrap(), but also loads Montserrat (Nexa Black lookalike) from Google Fonts. */
+export function wrapWithFont(w: string, h: string, bg: string, css: string, body: string): string {
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&display=swap">
+<style>
+${printReset(w, h, bg)}
+body { font-family: 'Montserrat', system-ui, sans-serif; }
+${css}
+</style></head><body>${body}</body></html>`;
+}
+
 // ---------------------------------------------------------------------------
 // Generator registry
 // ---------------------------------------------------------------------------
@@ -126,6 +142,14 @@ function themeFor(templateId: string) {
   return { c: isDark ? P.dark : P.light, l: isDark ? LOGOS.dark : LOGOS.light };
 }
 
+/** Generate an inline scalable SVG QR code for the given URL. */
+function qrSvg(url: string): string {
+  const qr = qrcode(0, "M");
+  qr.addData(url);
+  qr.make();
+  return qr.createSvgTag({ scalable: true, margin: 1 });
+}
+
 /** Resolve logo/icon src: prefer dynamic brand asset, fall back to static data URI. */
 function assets(opts: GenerateOptions) {
   const { l } = themeFor(opts.templateId);
@@ -134,6 +158,11 @@ function assets(opts: GenerateOptions) {
     iconSrc: opts.icon ?? l.icon,
   };
 }
+
+// Social icons (colored, print-safe inline SVG)
+const FB_ICON  = `<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#1877F2"/><path d="M13.5 8H12a.5.5 0 0 0-.5.5V10h2l-.3 2H11.5v6h-2v-6H8V10h1.5V8.5A2.5 2.5 0 0 1 12 6h1.5v2z" fill="#fff"/></svg>`;
+const IG_ICON  = `<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#E4405F"/><rect x="6" y="6" width="12" height="12" rx="3" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="3" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="16.5" cy="7.5" r="1" fill="#fff"/></svg>`;
+const YT_ICON  = `<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#FF0000"/><path d="M10 9l6 3-6 3V9z" fill="#fff"/></svg>`;
 
 // ---------------------------------------------------------------------------
 // BUSINESS CARDS
@@ -145,39 +174,92 @@ function businessCard(templateId: string): GenFn {
     const { c } = themeFor(templateId);
     const { logoSrc, iconSrc } = assets(opts);
     const tagline = resolveTagline(templateId, opts.tagline, fields.tagline);
+    const websiteUrl = opts.website || fields.website || "";
+    const qr = websiteUrl ? qrSvg(websiteUrl) : "";
+
     const css = `
-      .card { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; justify-content:space-between; padding:16px; page-break-after:always; }
-      .top { display:flex; align-items:flex-start; justify-content:space-between; }
-      .accent { width:32px; height:4px; background:${c.accent}; margin-top:8px; }
-      .name { font-size:14px; font-weight:600; color:${c.name}; margin-bottom:2px; }
-      .sub { font-size:11px; color:${c.secondary}; margin-bottom:2px; }
-      .tagline { font-size:11px; color:${c.secondary}; margin-bottom:8px; }
-      .contact { font-size:11px; color:${c.detail}; line-height:1.4; }
-      .back { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
-      .back .icon { max-height:50px; max-width:50px; object-fit:contain; }
-      .back .logo { max-height:42px; max-width:210px; object-fit:contain; }
-      .back .tagline { font-size:9px; color:${c.secondary}; margin:0; }
+      /* ── Front ── */
+      /* Card is a column: brand zone top, contact zone bottom, space between */
+      .card { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; justify-content:space-between; padding:20px; page-break-after:always; }
+      /* Brand zone: logo stacked above the accent bar, both left-anchored */
+      .brand-top { display:flex; flex-direction:column; align-items:flex-start; }
+      .accent { width:28px; height:3px; background:#000000; margin-top:5px; }
+      /* Contact zone: info block left, icon right, both pinned to the bottom edge */
+      .bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+      .info { flex:1; min-width:0; }
+      /* Name is the visual anchor — heavier and larger than everything else */
+      .name { font-size:14px; font-weight:800; letter-spacing:0.05em; color:${c.name}; margin-bottom:3px; }
+      /* Title sits close to name (same identity cluster) */
+      .sub { font-size:9px; font-weight:500; color:${c.secondary}; margin-bottom:8px; }
+      /* 8 px gap creates a clear break between "who you are" and "how to reach you" */
+      .contact { font-size:9px; font-weight:400; color:${c.detail}; line-height:1.7; }
+      .front-icon { width:48px; height:48px; flex-shrink:0; object-fit:contain; }
+
+      /* ── Back ── */
+      /* QR centered vertically; brand-col stretches full height for space-between distribution */
+      .back { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; align-items:center; padding:20px; gap:16px; }
+      .back .qr-col { width:100px; height:100px; flex-shrink:0; }
+      .back .qr-col svg { width:100%; height:100%; display:block; }
+      /* align-self:stretch fills the content height regardless of parent align-items */
+      .back .brand-col { flex:1; display:flex; flex-direction:column; justify-content:space-between; align-self:stretch; }
+      .back .b-logo { max-height:36px; max-width:170px; object-fit:contain; }
+      .back .b-tag { font-size:9px; font-weight:400; color:${c.secondary}; margin-top:3px; }
+      .back .divider { height:1px; background:${c.rule}; margin:6px 0; }
+      .back .find-us { font-size:7px; font-weight:800; color:${c.muted}; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:5px; }
+      .back .social-row { display:flex; gap:6px; align-items:center; }
+
+      /* ── Back (no QR — centered fallback) ── */
+      .back-center { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; }
+      .back-center .b-logo { max-height:44px; max-width:240px; object-fit:contain; }
+      .back-center .b-tag { font-size:9px; font-weight:400; color:${c.secondary}; }
+      .back-center .divider { width:56%; height:1px; background:${c.rule}; margin:3px 0; }
+      .back-center .find-us { font-size:7px; font-weight:800; color:${c.muted}; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:3px; }
+      .back-center .social-row { display:flex; gap:6px; align-items:center; }
     `;
 
+    // Front — brand zone (logo + accent) top, contact zone bottom-right with icon
     const frontHTML = `<div class="card">
-      <div class="top">${logoImg(logoSrc, "48px", "120px")}<div class="accent"></div></div>
-      <div>
-        <div class="name">${esc(fields.name || "")}</div>
-        <div class="sub">${esc(fields.title || "")}</div>
-        <div class="tagline">${esc(tagline)}</div>
-        <div class="contact"><p>${esc(fields.email || "")}</p><p>${esc(fields.phone || "")}</p></div>
+      <div class="brand-top">
+        ${logoImg(logoSrc, "44px", "130px")}
+        <div class="accent"></div>
+      </div>
+      <div class="bottom">
+        <div class="info">
+          <div class="name">${esc(fields.name || "")}</div>
+          <div class="sub">${esc(fields.title || "")}</div>
+          <div class="contact"><p>${esc(fields.email || "")}</p><p>${esc(fields.phone || "")}</p></div>
+        </div>
+        <img src="${iconSrc}" alt="Icon" class="front-icon">
       </div>
     </div>`;
 
-    const backHTML = `<div class="back">
-      <img src="${iconSrc}" alt="Icon" class="icon">
-      <img src="${logoSrc}" alt="Logo" class="logo">
-      <div class="tagline">${esc(tagline)}</div>
-    </div>`;
+    // Back — QR left + logo/social right (no icon); or centered if no website
+    const backHTML = qr
+      ? `<div class="back">
+          <div class="qr-col">${qr}</div>
+          <div class="brand-col">
+            <div>
+              <img src="${logoSrc}" alt="Logo" class="b-logo">
+              <div class="b-tag">${esc(tagline)}</div>
+            </div>
+            <div>
+              <div class="divider"></div>
+              <div class="find-us">FIND US ON</div>
+              <div class="social-row">${FB_ICON}${IG_ICON}${YT_ICON}</div>
+            </div>
+          </div>
+        </div>`
+      : `<div class="back-center">
+          <img src="${logoSrc}" alt="Logo" class="b-logo">
+          <div class="b-tag">${esc(tagline)}</div>
+          <div class="divider"></div>
+          <div class="find-us">FIND US ON</div>
+          <div class="social-row">${FB_ICON}${IG_ICON}${YT_ICON}</div>
+        </div>`;
 
-    if (page === "front") return wrap(asset.width, asset.height, c.bg, css, frontHTML);
-    if (page === "back") return wrap(asset.width, asset.height, c.bg, css, backHTML);
-    return wrap(asset.width, asset.height, c.bg, css, frontHTML + backHTML);
+    if (page === "front") return wrapWithFont(asset.width, asset.height, c.bg, css, frontHTML);
+    if (page === "back") return wrapWithFont(asset.width, asset.height, c.bg, css, backHTML);
+    return wrapWithFont(asset.width, asset.height, c.bg, css, frontHTML + backHTML);
   };
 }
 
@@ -193,18 +275,20 @@ function envelope(templateId: string): GenFn {
     const { asset, fields } = opts;
     const { c } = themeFor(templateId);
     const { logoSrc } = assets(opts);
-    return wrap(asset.width, asset.height, c.bg, `
-      .env { width:${asset.width}; height:${asset.height}; background:${c.bg}; padding:24px 32px; position:relative; }
-      .from { position:absolute; top:24px; left:32px; }
-      .from-name { font-size:12px; font-weight:600; color:${c.name}; margin-bottom:2px; }
-      .from-addr { font-size:10px; color:${c.detail}; white-space:pre-line; }
-      .to { position:absolute; top:50%; left:50%; transform:translate(-50%,-30%); text-align:center; }
-      .to-name { font-size:14px; font-weight:600; color:${c.name}; margin-bottom:4px; }
-      .to-addr { font-size:12px; color:${c.detail}; white-space:pre-line; }
-      .rule { position:absolute; bottom:24px; left:32px; right:32px; height:1px; background:${c.rule}; }
+    return wrapWithFont(asset.width, asset.height, c.bg, `
+      .env { width:${asset.width}; height:${asset.height}; background:${c.bg}; padding:28px 36px; position:relative; }
+      /* Return-address block: logo → sender name → address, left-anchored top */
+      .from { position:absolute; top:28px; left:36px; }
+      /* from-name is quieter than the logo — it's detail, not identity */
+      .from-name { font-size:11px; font-weight:700; letter-spacing:0.02em; color:${c.name}; margin-top:6px; margin-bottom:2px; }
+      .from-addr { font-size:10px; font-weight:400; color:${c.detail}; line-height:1.65; white-space:pre-line; }
+      /* Recipient block: fixed 55% down, true-centered with translate(-50%,-50%) */
+      .to { position:absolute; top:55%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+      .to-name { font-size:14px; font-weight:800; letter-spacing:0.04em; color:${c.name}; margin-bottom:5px; }
+      .to-addr { font-size:11px; font-weight:400; color:${c.detail}; line-height:1.7; white-space:pre-line; }
     `, `<div class="env">
       <div class="from">
-        ${logoImg(logoSrc, "72px", "202px")}
+        ${logoImg(logoSrc, "48px", "220px")}
         <div class="from-name">${esc(fields.fromName || "")}</div>
         <div class="from-addr">${esc(fields.fromAddress || "")}</div>
       </div>
@@ -212,7 +296,6 @@ function envelope(templateId: string): GenFn {
         <div class="to-name">${esc(fields.toName || "")}</div>
         <div class="to-addr">${esc(fields.toAddress || "")}</div>
       </div>
-      <div class="rule"></div>
     </div>`);
   };
 }
@@ -226,19 +309,25 @@ reg("envelope", "light-es", envelope("light-es"));
 
 function sticker(templateId: string): GenFn {
   return (opts) => {
-    const { asset } = opts;
+    const { asset, fields } = opts;
     const { c } = themeFor(templateId);
     const { logoSrc, iconSrc } = assets(opts);
     const tagline = resolveTagline(templateId, opts.tagline);
-    return wrap(asset.width, asset.height, c.bg, `
-      .sticker { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; border:2px solid ${c.rule}; border-radius:12px; }
-      .icon { max-height:75px; max-width:75px; object-fit:contain; }
-      .logo { max-height:60px; max-width:270px; object-fit:contain; }
-      .tagline { font-size:11px; color:${c.secondary}; margin-top:4px; }
+    const phone = fields.phone || "";
+    return wrapWithFont(asset.width, asset.height, c.bg, `
+      /* 16 px padding provides a print-safe inset inside the die-cut border */
+      .sticker { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:16px; border:1.5px solid ${c.rule}; border-radius:8px; }
+      /* Icon is the recognisable brand mark; logo wordmark sits just below it */
+      .icon { max-height:56px; max-width:56px; object-fit:contain; }
+      .logo { max-height:44px; max-width:210px; object-fit:contain; }
+      .tagline { font-size:10px; font-weight:400; color:${c.secondary}; }
+      /* Phone is the primary CTA on a sticker — heavier weight, extra tracking, clear air above */
+      .phone { font-size:14px; font-weight:700; letter-spacing:0.04em; color:${c.name}; margin-top:4px; }
     `, `<div class="sticker">
       <img src="${iconSrc}" alt="Icon" class="icon">
       <img src="${logoSrc}" alt="Logo" class="logo">
       <div class="tagline">${esc(tagline)}</div>
+      ${phone ? `<div class="phone">${esc(phone)}</div>` : ""}
     </div>`);
   };
 }

@@ -55,6 +55,7 @@ export const ASSET_TYPES: AssetTypeConfig[] = [
       { key: "email", label: "Email", placeholder: "contact@company.com", type: "email" },
       { key: "phone", label: "Phone", placeholder: "+1 (555) 123-4567", type: "tel" },
       { key: "tagline", label: "Tagline", placeholder: "Your company tagline", readonly: true, hint: "Edit in Branding → Company Info" },
+      { key: "website", label: "Website / QR Code URL", placeholder: "https://yourcompany.com", readonly: true, hint: "Edit in Branding → Company Info" },
     ],
   },
   {
@@ -90,7 +91,9 @@ export const ASSET_TYPES: AssetTypeConfig[] = [
       { id: "light", name: "English", description: "White background sticker" },
       { id: "light-es", name: "Spanish", description: "White sticker, Spanish" },
     ],
-    fields: [],
+    fields: [
+      { key: "phone", label: "Phone", placeholder: "+1 (555) 123-4567", type: "tel" as const, readonly: true, hint: "Edit in Branding → Company Info" },
+    ],
   },
 ];
 

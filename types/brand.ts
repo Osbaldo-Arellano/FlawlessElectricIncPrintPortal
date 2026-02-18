@@ -17,6 +17,7 @@ export interface BrandState {
   tagline: string;
   email: string;
   phone: string;
+  website: string;
   logo: string | null;  // wide/horizontal logo
   icon: string | null;  // square brand mark
   about_us: string;
@@ -29,6 +30,7 @@ export const defaultBrand: BrandState = {
   tagline: "",
   email: "",
   phone: "",
+  website: "",
   logo: null,
   icon: null,
   about_us: "",

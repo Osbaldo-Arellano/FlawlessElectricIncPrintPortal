@@ -83,6 +83,19 @@ export function CompanyInfoCard({ brand, onUpdate, dirty, saving, onSave }: Comp
             </div>
           </div>
 
+          <div className="space-y-1">
+            <label htmlFor="website" className="block text-sm font-medium text-zinc-300">Website</label>
+            <input
+              id="website"
+              type="url"
+              value={brand.website}
+              onChange={(e) => onUpdate({ website: e.target.value })}
+              placeholder="https://yourcompany.com"
+              className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <p className="text-xs text-zinc-500">Used as the QR code destination on business cards.</p>
+          </div>
+
             <button
             onClick={onSave}
             disabled={!dirty || saving}

@@ -68,7 +68,9 @@ const STICKER: AssetTypeConfig = {
     { id: "light-es", name: "Light (ES)", description: "White sticker, Spanish" },
     { id: "dark-es", name: "Dark (ES)", description: "Dark sticker, Spanish" },
   ],
-  fields: [],
+  fields: [
+    { key: "phone", label: "Phone", placeholder: "+1 (555) 123-4567", type: "tel" as const, readonly: true, hint: "Edit in Branding → Company Info" },
+  ],
 };
 
 function baseOpts(
@@ -79,8 +81,9 @@ function baseOpts(
   dark = false,
   tagline = "",
   icon: string | null = null,
+  website = "",
 ) {
-  return { asset, templateId, fields, logo, dark, tagline, icon };
+  return { asset, templateId, fields, logo, dark, tagline, icon, website };
 }
 
 // ---------------------------------------------------------------------------
@@ -242,27 +245,73 @@ describe("business-card light", () => {
     const html = generateAssetHTML(baseOpts(BUSINESS_CARD, "light", fields));
     expect(html).toContain("data:image/svg+xml;base64,");
   });
+
+  it("renders icon on the front", () => {
+    const html = generateAssetHTML({ ...baseOpts(BUSINESS_CARD, "light", fields), page: "front" });
+    expect(html).toContain('class="front-icon"');
+  });
+
+  it("renders a QR code column on back when website is provided", () => {
+    const html = generateAssetHTML(
+      baseOpts(BUSINESS_CARD, "light", fields, null, false, "", null, "https://flawlesselectricinc.com"),
+    );
+    expect(html).toContain('class="qr-col"');
+  });
+
+  it("omits QR column when website is empty", () => {
+    const html = generateAssetHTML(baseOpts(BUSINESS_CARD, "light", fields));
+    expect(html).not.toContain('class="qr-col"');
+  });
 });
 
 describe("business-card page option", () => {
   const fields = { name: "Test", title: "Dev", email: "t@t.com", phone: "555", tagline: "Tag" };
 
-  it("front-only contains .card but not .back", () => {
+  it("front-only contains .card but not a back wrapper", () => {
     const html = generateAssetHTML({ ...baseOpts(BUSINESS_CARD, "light", fields), page: "front" });
     expect(html).toContain("class=\"card\"");
-    expect(html).not.toContain("class=\"back\"");
+    expect(html).not.toMatch(/class="back(-center)?"/);
   });
 
-  it("back-only contains .back but not .card", () => {
+  it("back-only contains a back wrapper but not .card", () => {
     const html = generateAssetHTML({ ...baseOpts(BUSINESS_CARD, "light", fields), page: "back" });
-    expect(html).toContain("class=\"back\"");
+    expect(html).toMatch(/class="back(-center)?"/);
     expect(html).not.toContain("class=\"card\"");
   });
 
   it("no page option renders both front and back", () => {
     const html = generateAssetHTML(baseOpts(BUSINESS_CARD, "light", fields));
     expect(html).toContain("class=\"card\"");
-    expect(html).toContain("class=\"back\"");
+    expect(html).toMatch(/class="back(-center)?"/);
+  });
+});
+
+describe("business-card back social icons", () => {
+  it("includes FIND US ON text on the back", () => {
+    const html = generateAssetHTML({ ...baseOpts(BUSINESS_CARD, "light", {}), page: "back" });
+    expect(html).toContain("FIND US ON");
+  });
+
+  it("includes Facebook, Instagram, YouTube colors on the back", () => {
+    const html = generateAssetHTML({ ...baseOpts(BUSINESS_CARD, "light", {}), page: "back" });
+    expect(html).toContain("#1877F2"); // Facebook blue
+    expect(html).toContain("#E4405F"); // Instagram pink
+    expect(html).toContain("#FF0000"); // YouTube red
+  });
+
+  it("shows QR layout when website is provided", () => {
+    const html = generateAssetHTML({
+      ...baseOpts(BUSINESS_CARD, "light", {}, null, false, "", null, "https://flawlesselectricinc.com"),
+      page: "back",
+    });
+    expect(html).toContain('class="back"');
+    expect(html).toContain('class="qr-col"');
+  });
+
+  it("shows centered layout when no website", () => {
+    const html = generateAssetHTML({ ...baseOpts(BUSINESS_CARD, "light", {}), page: "back" });
+    expect(html).toContain('class="back-center"');
+    expect(html).not.toContain('class="qr-col"');
   });
 });
 
@@ -336,6 +385,16 @@ describe("sticker light", () => {
   it("includes sticker CSS class", () => {
     const html = generateAssetHTML(baseOpts(STICKER, "light", {}));
     expect(html).toContain(".sticker");
+  });
+
+  it("renders phone number when provided", () => {
+    const html = generateAssetHTML(baseOpts(STICKER, "light", { phone: "(555) 987-6543" }));
+    expect(html).toContain("(555) 987-6543");
+  });
+
+  it("omits phone div when phone is empty", () => {
+    const html = generateAssetHTML(baseOpts(STICKER, "light", {}));
+    expect(html).not.toContain('class="phone"');
   });
 });
 

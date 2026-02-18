@@ -48,6 +48,7 @@ export default function DashboardPage() {
             tagline: data.tagline ?? prev.tagline,
             email: data.email ?? prev.email,
             phone: data.phone ?? prev.phone,
+            website: data.website_url ?? prev.website,
             logo: data.logo_url ?? prev.logo,
             icon: data.icon_url ?? prev.icon,
             about_us: data.about_us ?? prev.about_us,
@@ -75,6 +76,7 @@ export default function DashboardPage() {
           tagline: brand.tagline,
           email: brand.email,
           phone: brand.phone,
+          website_url: brand.website,
           logo_url: brand.logo,
           icon_url: brand.icon,
           about_us: brand.about_us,
@@ -102,6 +104,7 @@ export default function DashboardPage() {
           tagline: brand.tagline,
           email: brand.email,
           phone: brand.phone,
+          website_url: brand.website,
           logo_url: url,
           icon_url: brand.icon,
           about_us: brand.about_us,
@@ -124,6 +127,7 @@ export default function DashboardPage() {
           tagline: brand.tagline,
           email: brand.email,
           phone: brand.phone,
+          website_url: brand.website,
           logo_url: brand.logo,
           icon_url: url,
           about_us: brand.about_us,
@@ -257,8 +261,8 @@ export default function DashboardPage() {
                   </svg>
                   <p className="text-sm text-amber-300">
                     <span className="font-semibold">Live data.</span> Changes
-                    here sync directly to your client&apos;s public website.
-                    Unlock to edit.
+                    here sync directly to your the public website and print
+                    assets. Unlock to edit.
                   </p>
                 </div>
               )}

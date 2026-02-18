@@ -43,6 +43,7 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
       if (f.key === "email") seed[f.key] = brand.email;
       else if (f.key === "phone") seed[f.key] = formatPhone(brand.phone);
       else if (f.key === "tagline") seed[f.key] = brand.tagline;
+      else if (f.key === "website") seed[f.key] = brand.website;
       else if (f.key === "companyName" || f.key === "fromName") seed[f.key] = brand.name;
       else seed[f.key] = "";
     }
@@ -62,10 +63,11 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
         logo: brand.logo,
         icon: brand.icon,
         tagline: brand.tagline,
+        website: brand.website,
         dark,
         page: hasBack ? "front" : undefined,
       }),
-    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, dark, hasBack]
+    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, brand.website, dark, hasBack]
   );
 
   const backHTML = useMemo(
@@ -78,11 +80,12 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
             logo: brand.logo,
             icon: brand.icon,
             tagline: brand.tagline,
+            website: brand.website,
             dark,
             page: "back",
           })
         : "",
-    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, dark, hasBack]
+    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, brand.website, dark, hasBack]
   );
 
   // Full HTML with both pages for PDF order
@@ -95,9 +98,10 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
         logo: brand.logo,
         icon: brand.icon,
         tagline: brand.tagline,
+        website: brand.website,
         dark,
       }),
-    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, dark]
+    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, brand.website, dark]
   );
 
   const formatPhone = (raw: string): string => {

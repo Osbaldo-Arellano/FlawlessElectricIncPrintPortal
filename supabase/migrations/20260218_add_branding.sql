@@ -16,7 +16,8 @@ alter table brands
   add column if not exists address       jsonb not null default '{}'::jsonb,
   add column if not exists social_links  jsonb not null default '[]'::jsonb,
   add column if not exists logo_variants jsonb not null default '{}'::jsonb,
-  add column if not exists icon_url      text;        -- square brand mark, separate from the wide logo
+  add column if not exists icon_url      text,        -- square brand mark, separate from the wide logo
+  add column if not exists website_url   text;        -- brand website; encoded as QR code on business cards
 
 -- Enforce expected JSONB shapes at the DB level
 alter table brands
