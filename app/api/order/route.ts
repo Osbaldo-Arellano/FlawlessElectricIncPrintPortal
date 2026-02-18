@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
 import nodemailer from "nodemailer";
 
 export const runtime = "nodejs";
@@ -21,10 +21,34 @@ export async function POST(req: NextRequest) {
   }
 
   // Generate PDF
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  const isVercel = Boolean(process.env.VERCEL);
+  const puppeteer = isVercel
+    ? (await import("puppeteer-core")).default
+    : (await import("puppeteer")).default;
+
+  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined;
+  try {
+    browser = await puppeteer.launch(
+      isVercel
+        ? {
+            args: chromium.args,
+            defaultViewport: chromium.defaultViewport,
+            executablePath: await chromium.executablePath(),
+            headless: chromium.headless,
+          }
+        : {
+            headless: true,
+            args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          },
+    );
+  } catch (err) {
+    console.error("Puppeteer launch failed", {
+      isVercel,
+      hasExecutablePath: Boolean(process.env.CHROME_EXECUTABLE_PATH),
+      err,
+    });
+    return new Response("Failed to launch browser", { status: 500 });
+  }
 
   let pdfBuffer: Buffer;
   try {
@@ -40,7 +64,9 @@ export async function POST(req: NextRequest) {
 
     pdfBuffer = Buffer.from(pdf);
   } finally {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   }
 
   // Send email
