@@ -18,23 +18,22 @@ export async function POST(req: NextRequest) {
   }
 
   const isVercel = Boolean(process.env.VERCEL);
-  const puppeteer = isVercel
-    ? (await import("puppeteer-core")).default
-    : (await import("puppeteer")).default;
+  type PuppeteerModule = typeof import("puppeteer");
+  const puppeteer = (isVercel
+    ? await import("puppeteer-core")
+    : await import("puppeteer")) as unknown as PuppeteerModule;
 
-  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined;
+  let browser: Awaited<ReturnType<PuppeteerModule["launch"]>> | undefined;
   try {
     browser = await puppeteer.launch(
       isVercel
         ? {
-            args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
-            executablePath: await chromium.executablePath(),
-            headless: chromium.headless,
-          }
+          args: chromium.args,
+          executablePath: await chromium.executablePath(),
+        }
         : {
-            headless: true,
-            args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          headless: true,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
           },
     );
   } catch (err) {
