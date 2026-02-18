@@ -1,15 +1,37 @@
+export interface BrandAddress {
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}
+
+export interface SocialLink {
+  platform: string;
+  url: string;
+  handle: string;
+}
+
 export interface BrandState {
   name: string;
   tagline: string;
   email: string;
   phone: string;
-  logo: string | null;
+  logo: string | null;  // wide/horizontal logo
+  icon: string | null;  // square brand mark
+  about_us: string;
+  address: BrandAddress;
+  social_links: SocialLink[];
 }
 
 export const defaultBrand: BrandState = {
-  name: "Flawless Electric Inc",
-  tagline: "Military discipline. Trade precision.",
-  email: "Gonzalo@flawlesselectricinc.com",
-  phone: "5037408597",
+  name: "",
+  tagline: "",
+  email: "",
+  phone: "",
   logo: null,
+  icon: null,
+  about_us: "",
+  address: { street: "", city: "", state: "", zip: "", country: "" },
+  social_links: [],
 };

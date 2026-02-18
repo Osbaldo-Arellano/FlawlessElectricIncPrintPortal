@@ -11,7 +11,7 @@ export async function GET() {
   const userId = session.user.sub;
   const { data, error } = await supabase
     .from("brands")
-    .select("name, tagline, email, phone, logo_url")
+    .select("name, tagline, email, phone, logo_url, icon_url, about_us, address, social_links")
     .eq("user_id", userId)
     .single();
 
@@ -28,12 +28,24 @@ export async function PUT(request: Request) {
 
   const userId = session.user.sub;
   const body = await request.json();
-  const { name, tagline, email, phone, logo_url } = body;
+  const { name, tagline, email, phone, logo_url, icon_url, about_us, address, social_links } = body;
 
   const { data, error } = await supabase
     .from("brands")
     .upsert(
-      { user_id: userId, name, tagline, email, phone, logo_url, updated_at: new Date().toISOString() },
+      {
+        user_id: userId,
+        name,
+        tagline,
+        email,
+        phone,
+        logo_url,
+        icon_url,
+        about_us,
+        address,
+        social_links,
+        updated_at: new Date().toISOString(),
+      },
       { onConflict: "user_id" }
     )
     .select()

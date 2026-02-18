@@ -77,8 +77,10 @@ function baseOpts(
   fields: Record<string, string> = {},
   logo: string | null = null,
   dark = false,
+  tagline = "",
+  icon: string | null = null,
 ) {
-  return { asset, templateId, fields, logo, dark };
+  return { asset, templateId, fields, logo, dark, tagline, icon };
 }
 
 // ---------------------------------------------------------------------------
@@ -242,21 +244,6 @@ describe("business-card light", () => {
   });
 });
 
-describe("business-card dark", () => {
-  const fields = { name: "Bob", title: "CEO", email: "b@c.com", phone: "555-0000", tagline: "Lead" };
-
-  it("uses dark palette background", () => {
-    const html = generateAssetHTML(baseOpts(BUSINESS_CARD, "dark", fields, null, true));
-    expect(html).toContain("background:#09090b");
-  });
-
-  it("renders fields", () => {
-    const html = generateAssetHTML(baseOpts(BUSINESS_CARD, "dark", fields, null, true));
-    expect(html).toContain("Bob");
-    expect(html).toContain("CEO");
-  });
-});
-
 describe("business-card page option", () => {
   const fields = { name: "Test", title: "Dev", email: "t@t.com", phone: "555", tagline: "Tag" };
 
@@ -286,11 +273,6 @@ describe("business-card spanish", () => {
     const html = generateAssetHTML(baseOpts(BUSINESS_CARD, "light-es", fields));
     expect(html).toContain("Disciplina militar");
     expect(html).toContain("Precisión de oficio");
-  });
-
-  it("dark-es uses Spanish tagline", () => {
-    const html = generateAssetHTML(baseOpts(BUSINESS_CARD, "dark-es", fields, null, true));
-    expect(html).toContain("Disciplina militar");
   });
 
   it("light (English) does not use Spanish tagline", () => {
@@ -329,26 +311,6 @@ describe("envelope light", () => {
   });
 });
 
-describe("envelope dark", () => {
-  const fields = { fromName: "Acme", fromAddress: "123 Main", toName: "Bob", toAddress: "456 Oak" };
-
-  it("uses dark palette background", () => {
-    const html = generateAssetHTML(baseOpts(ENVELOPE, "dark", fields, null, true));
-    expect(html).toContain("background:#09090b");
-  });
-
-  it("contains white-space:pre-line", () => {
-    const html = generateAssetHTML(baseOpts(ENVELOPE, "dark", fields, null, true));
-    expect(html).toContain("white-space:pre-line");
-  });
-
-  it("renders from and to names", () => {
-    const html = generateAssetHTML(baseOpts(ENVELOPE, "dark", fields, null, true));
-    expect(html).toContain("Acme");
-    expect(html).toContain("Bob");
-  });
-});
-
 // ---------------------------------------------------------------------------
 // 4 — Stickers
 // ---------------------------------------------------------------------------
@@ -366,8 +328,8 @@ describe("sticker light", () => {
     expect(imgMatches!.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("includes English tagline", () => {
-    const html = generateAssetHTML(baseOpts(STICKER, "light", {}));
+  it("renders the brand tagline", () => {
+    const html = generateAssetHTML(baseOpts(STICKER, "light", {}, null, false, "Military discipline. Trade precision."));
     expect(html).toContain("Military discipline. Trade precision.");
   });
 
@@ -377,23 +339,11 @@ describe("sticker light", () => {
   });
 });
 
-describe("sticker dark", () => {
-  it("uses dark palette background", () => {
-    const html = generateAssetHTML(baseOpts(STICKER, "dark", {}, null, true));
-    expect(html).toContain("background:#09090b");
-  });
-});
-
 describe("sticker spanish", () => {
   it("light-es uses Spanish tagline", () => {
     const html = generateAssetHTML(baseOpts(STICKER, "light-es", {}));
     expect(html).toContain("Disciplina militar");
     expect(html).toContain("Precisión de oficio");
-  });
-
-  it("dark-es uses Spanish tagline", () => {
-    const html = generateAssetHTML(baseOpts(STICKER, "dark-es", {}, null, true));
-    expect(html).toContain("Disciplina militar");
   });
 });
 

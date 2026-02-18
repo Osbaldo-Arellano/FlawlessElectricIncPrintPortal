@@ -40,7 +40,9 @@ interface GenerateOptions {
   asset: AssetTypeConfig;
   templateId: string;
   fields: Record<string, string>;
-  logo: string | null;
+  logo: string | null;   // wide/horizontal logo — falls back to static if null
+  icon: string | null;   // square brand mark — falls back to static if null
+  tagline: string;       // from brand.tagline; used by all templates
   dark?: boolean;
   /** For multi-page assets (business cards): render only "front" or "back". Omit for full document. */
   page?: "front" | "back";
@@ -109,14 +111,28 @@ function reg(assetId: string, templateId: string, fn: GenFn) {
 
 const TAGLINE_ES = "Disciplina militar. Precisión de oficio.";
 
-function resolveTagline(templateId: string, fieldTagline: string): string {
-  return templateId.endsWith("-es") ? TAGLINE_ES : fieldTagline;
+/**
+ * Resolve the tagline for a template.
+ * Priority: Spanish override (for -es templates) > brand tagline > field tagline > ""
+ */
+function resolveTagline(templateId: string, brandTagline: string, fieldTagline?: string): string {
+  if (templateId.endsWith("-es")) return TAGLINE_ES;
+  return brandTagline || fieldTagline || "";
 }
 
-/** Return palette + logos for a template id (light/dark, with optional -es suffix) */
+/** Return palette and static logo fallbacks for a template id. */
 function themeFor(templateId: string) {
   const isDark = templateId.startsWith("dark");
   return { c: isDark ? P.dark : P.light, l: isDark ? LOGOS.dark : LOGOS.light };
+}
+
+/** Resolve logo/icon src: prefer dynamic brand asset, fall back to static data URI. */
+function assets(opts: GenerateOptions) {
+  const { l } = themeFor(opts.templateId);
+  return {
+    logoSrc: opts.logo ?? l.logo,
+    iconSrc: opts.icon ?? l.icon,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -124,9 +140,11 @@ function themeFor(templateId: string) {
 // ---------------------------------------------------------------------------
 
 function businessCard(templateId: string): GenFn {
-  return ({ asset, fields, page }) => {
-    const { c, l } = themeFor(templateId);
-    const tagline = resolveTagline(templateId, fields.tagline || "");
+  return (opts) => {
+    const { asset, fields, page } = opts;
+    const { c } = themeFor(templateId);
+    const { logoSrc, iconSrc } = assets(opts);
+    const tagline = resolveTagline(templateId, opts.tagline, fields.tagline);
     const css = `
       .card { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; justify-content:space-between; padding:16px; page-break-after:always; }
       .top { display:flex; align-items:flex-start; justify-content:space-between; }
@@ -136,13 +154,13 @@ function businessCard(templateId: string): GenFn {
       .tagline { font-size:11px; color:${c.secondary}; margin-bottom:8px; }
       .contact { font-size:11px; color:${c.detail}; line-height:1.4; }
       .back { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
-      .back .icon { max-height:40px; max-width:40px; object-fit:contain; }
-      .back .logo { max-height:28px; max-width:140px; object-fit:contain; }
+      .back .icon { max-height:50px; max-width:50px; object-fit:contain; }
+      .back .logo { max-height:42px; max-width:210px; object-fit:contain; }
       .back .tagline { font-size:9px; color:${c.secondary}; margin:0; }
     `;
 
     const frontHTML = `<div class="card">
-      <div class="top">${logoImg(l.logo, "32px", "80px")}<div class="accent"></div></div>
+      <div class="top">${logoImg(logoSrc, "48px", "120px")}<div class="accent"></div></div>
       <div>
         <div class="name">${esc(fields.name || "")}</div>
         <div class="sub">${esc(fields.title || "")}</div>
@@ -152,30 +170,29 @@ function businessCard(templateId: string): GenFn {
     </div>`;
 
     const backHTML = `<div class="back">
-      <img src="${l.icon}" alt="Icon" class="icon">
-      <img src="${l.logo}" alt="Logo" class="logo">
+      <img src="${iconSrc}" alt="Icon" class="icon">
+      <img src="${logoSrc}" alt="Logo" class="logo">
       <div class="tagline">${esc(tagline)}</div>
     </div>`;
 
     if (page === "front") return wrap(asset.width, asset.height, c.bg, css, frontHTML);
     if (page === "back") return wrap(asset.width, asset.height, c.bg, css, backHTML);
-    // Full document (for PDF): both pages
     return wrap(asset.width, asset.height, c.bg, css, frontHTML + backHTML);
   };
 }
 
 reg("business-card", "light", businessCard("light"));
-reg("business-card", "dark", businessCard("dark"));
 reg("business-card", "light-es", businessCard("light-es"));
-reg("business-card", "dark-es", businessCard("dark-es"));
 
 // ---------------------------------------------------------------------------
 // ENVELOPES
 // ---------------------------------------------------------------------------
 
 function envelope(templateId: string): GenFn {
-  return ({ asset, fields }) => {
-    const { c, l } = themeFor(templateId);
+  return (opts) => {
+    const { asset, fields } = opts;
+    const { c } = themeFor(templateId);
+    const { logoSrc } = assets(opts);
     return wrap(asset.width, asset.height, c.bg, `
       .env { width:${asset.width}; height:${asset.height}; background:${c.bg}; padding:24px 32px; position:relative; }
       .from { position:absolute; top:24px; left:32px; }
@@ -187,7 +204,7 @@ function envelope(templateId: string): GenFn {
       .rule { position:absolute; bottom:24px; left:32px; right:32px; height:1px; background:${c.rule}; }
     `, `<div class="env">
       <div class="from">
-        ${logoImg(l.logo, "48px", "135px")}
+        ${logoImg(logoSrc, "72px", "202px")}
         <div class="from-name">${esc(fields.fromName || "")}</div>
         <div class="from-addr">${esc(fields.fromAddress || "")}</div>
       </div>
@@ -201,35 +218,33 @@ function envelope(templateId: string): GenFn {
 }
 
 reg("envelope", "light", envelope("light"));
-reg("envelope", "dark", envelope("dark"));
 reg("envelope", "light-es", envelope("light-es"));
-reg("envelope", "dark-es", envelope("dark-es"));
 
 // ---------------------------------------------------------------------------
 // STICKERS
 // ---------------------------------------------------------------------------
 
 function sticker(templateId: string): GenFn {
-  return ({ asset }) => {
-    const { c, l } = themeFor(templateId);
-    const tagline = templateId.endsWith("-es") ? TAGLINE_ES : "Military discipline. Trade precision.";
+  return (opts) => {
+    const { asset } = opts;
+    const { c } = themeFor(templateId);
+    const { logoSrc, iconSrc } = assets(opts);
+    const tagline = resolveTagline(templateId, opts.tagline);
     return wrap(asset.width, asset.height, c.bg, `
       .sticker { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; border:2px solid ${c.rule}; border-radius:12px; }
-      .icon { max-height:60px; max-width:60px; object-fit:contain; }
-      .logo { max-height:40px; max-width:180px; object-fit:contain; }
+      .icon { max-height:75px; max-width:75px; object-fit:contain; }
+      .logo { max-height:60px; max-width:270px; object-fit:contain; }
       .tagline { font-size:11px; color:${c.secondary}; margin-top:4px; }
     `, `<div class="sticker">
-      <img src="${l.icon}" alt="Icon" class="icon">
-      <img src="${l.logo}" alt="Logo" class="logo">
+      <img src="${iconSrc}" alt="Icon" class="icon">
+      <img src="${logoSrc}" alt="Logo" class="logo">
       <div class="tagline">${esc(tagline)}</div>
     </div>`);
   };
 }
 
 reg("sticker", "light", sticker("light"));
-reg("sticker", "dark", sticker("dark"));
 reg("sticker", "light-es", sticker("light-es"));
-reg("sticker", "dark-es", sticker("dark-es"));
 
 // ---------------------------------------------------------------------------
 // Fallback

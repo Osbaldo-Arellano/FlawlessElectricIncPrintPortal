@@ -60,10 +60,12 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
         templateId: template.id,
         fields,
         logo: brand.logo,
+        icon: brand.icon,
+        tagline: brand.tagline,
         dark,
         page: hasBack ? "front" : undefined,
       }),
-    [asset, template.id, fields, brand.logo, dark, hasBack]
+    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, dark, hasBack]
   );
 
   const backHTML = useMemo(
@@ -74,11 +76,13 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
             templateId: template.id,
             fields,
             logo: brand.logo,
+            icon: brand.icon,
+            tagline: brand.tagline,
             dark,
             page: "back",
           })
         : "",
-    [asset, template.id, fields, brand.logo, dark, hasBack]
+    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, dark, hasBack]
   );
 
   // Full HTML with both pages for PDF order
@@ -89,9 +93,11 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
         templateId: template.id,
         fields,
         logo: brand.logo,
+        icon: brand.icon,
+        tagline: brand.tagline,
         dark,
       }),
-    [asset, template.id, fields, brand.logo, dark]
+    [asset, template.id, fields, brand.logo, brand.icon, brand.tagline, dark]
   );
 
   const formatPhone = (raw: string): string => {
@@ -208,7 +214,30 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
             </p>
             <div className="space-y-3">
               {asset.fields.map((f) =>
-                f.type === "textarea" ? (
+                f.readonly ? (
+                  <div key={f.key} className="space-y-1">
+                    <label className="block text-xs font-medium text-zinc-400">{f.label}</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={fields[f.key] ?? ""}
+                        readOnly
+                        tabIndex={-1}
+                        placeholder={f.placeholder}
+                        className="w-full rounded-md border border-zinc-700 bg-zinc-800/50 px-3 py-2 pr-8 text-sm text-zinc-400 placeholder-zinc-600 cursor-not-allowed select-none"
+                      />
+                      <svg
+                        className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-600"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zM10 11V7a2 2 0 114 0v4" />
+                      </svg>
+                    </div>
+                    {f.hint && (
+                      <p className="text-xs text-zinc-500">{f.hint}</p>
+                    )}
+                  </div>
+                ) : f.type === "textarea" ? (
                   <div key={f.key} className="space-y-1">
                     <label className="block text-xs font-medium text-zinc-400">{f.label}{f.required && <span className="text-red-400"> *</span>}</label>
                     <textarea

@@ -4,6 +4,10 @@ export interface AssetField {
   placeholder: string;
   type?: "text" | "email" | "tel" | "textarea" | "currency";
   required?: boolean;
+  /** If true, the field is display-only — the value comes from brand state, not user input. */
+  readonly?: boolean;
+  /** Shown below a readonly field to guide the user where to edit it. */
+  hint?: string;
 }
 
 export interface AssetTemplate {
@@ -42,17 +46,15 @@ export const ASSET_TYPES: AssetTypeConfig[] = [
     previewHeight: 192,  // 2 * 96
     aspect: "1.75/1",
     templates: [
-      { id: "light", name: "Light", description: "Clean light background" },
-      { id: "dark", name: "Dark", description: "Bold dark background" },
-      { id: "light-es", name: "Light (ES)", description: "Light background, Spanish" },
-      { id: "dark-es", name: "Dark (ES)", description: "Dark background, Spanish" },
+      { id: "light", name: "English", description: "Clean light background" },
+      { id: "light-es", name: "Spanish", description: "Light background, Spanish" },
     ],
     fields: [
       { key: "name", label: "Name", placeholder: "John Smith", required: true },
       { key: "title", label: "Title", placeholder: "Software Engineer" },
       { key: "email", label: "Email", placeholder: "contact@company.com", type: "email" },
       { key: "phone", label: "Phone", placeholder: "+1 (555) 123-4567", type: "tel" },
-      { key: "tagline", label: "Tagline", placeholder: "Your company tagline" },
+      { key: "tagline", label: "Tagline", placeholder: "Your company tagline", readonly: true, hint: "Edit in Branding → Company Info" },
     ],
   },
   {
@@ -65,10 +67,8 @@ export const ASSET_TYPES: AssetTypeConfig[] = [
     previewHeight: 396,  // 4.125 * 96
     aspect: "9.5/4.125",
     templates: [
-      { id: "light", name: "Light", description: "Classic light envelope" },
-      { id: "dark", name: "Dark", description: "Modern dark envelope" },
-      { id: "light-es", name: "Light (ES)", description: "Light envelope, Spanish" },
-      { id: "dark-es", name: "Dark (ES)", description: "Dark envelope, Spanish" },
+      { id: "light", name: "English", description: "Classic light envelope" },
+      { id: "light-es", name: "Spanish", description: "Light envelope, Spanish" },
     ],
     fields: [
       { key: "fromName", label: "From Name", placeholder: "Company Name", required: true },
@@ -87,10 +87,8 @@ export const ASSET_TYPES: AssetTypeConfig[] = [
     previewHeight: 240,  // 2.5 * 96
     aspect: "3/2.5",
     templates: [
-      { id: "light", name: "Light", description: "White background sticker" },
-      { id: "dark", name: "Dark", description: "Dark background sticker" },
-      { id: "light-es", name: "Light (ES)", description: "White sticker, Spanish" },
-      { id: "dark-es", name: "Dark (ES)", description: "Dark sticker, Spanish" },
+      { id: "light", name: "English", description: "White background sticker" },
+      { id: "light-es", name: "Spanish", description: "White sticker, Spanish" },
     ],
     fields: [],
   },

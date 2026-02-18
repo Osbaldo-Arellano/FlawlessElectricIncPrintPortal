@@ -3,3 +3,7 @@ export { BrandPreview } from "./BrandPreview";
 export { AssetSelector } from "./AssetSelector";
 export { AssetTemplateGrid } from "./AssetTemplateGrid";
 export { AssetEditor } from "./AssetEditor";
+export { CompanyInfoCard } from "./CompanyInfoCard";
+export { LogoUploader } from "./LogoUploader";
+export { BrandingCard } from "./BrandingCard";
+export { PhotoGallery } from "./PhotoGallery";
