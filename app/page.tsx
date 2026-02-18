@@ -44,16 +44,31 @@ export default function DashboardPage() {
         if (data) {
           setBrand((prev) => ({
             ...prev,
-            name: data.name ?? prev.name,
-            tagline: data.tagline ?? prev.tagline,
-            email: data.email ?? prev.email,
-            phone: data.phone ?? prev.phone,
-            website: data.website_url ?? prev.website,
-            logo: data.logo_url ?? prev.logo,
-            icon: data.icon_url ?? prev.icon,
-            about_us: data.about_us ?? prev.about_us,
-            address: data.address ?? prev.address,
-            social_links: data.social_links ?? prev.social_links,
+            name:     data.name     ?? prev.name,
+            tagline:  data.tagline  ?? prev.tagline,
+            email:    data.email    ?? prev.email,
+            phone:    data.phone    ?? prev.phone,
+            website:  data.website_url ?? prev.website,
+            logo:     data.logo_url ?? prev.logo,
+            icon:     data.icon_url ?? prev.icon,
+            about_us: data.about_us ?? "",
+            // Guard each address field individually — data.address may be {} (the DB
+            // default for a JSONB column), which is truthy and bypasses a top-level ??
+            address: {
+              street:  data.address?.street  ?? prev.address.street,
+              city:    data.address?.city    ?? prev.address.city,
+              state:   data.address?.state   ?? prev.address.state,
+              zip:     data.address?.zip     ?? prev.address.zip,
+              country: data.address?.country ?? prev.address.country,
+            },
+            // Normalize each link so platform/url/handle are always strings, not undefined
+            social_links: (data.social_links ?? prev.social_links).map(
+              (l: { platform?: string; url?: string; handle?: string }) => ({
+                platform: l.platform ?? "",
+                url:      l.url      ?? "",
+                handle:   l.handle   ?? "",
+              })
+            ),
           }));
         }
       })
