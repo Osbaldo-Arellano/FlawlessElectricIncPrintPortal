@@ -1,0 +1,101 @@
+export interface AssetField {
+  key: string;
+  label: string;
+  placeholder: string;
+  type?: "text" | "email" | "tel" | "textarea" | "currency";
+  required?: boolean;
+}
+
+export interface AssetTemplate {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface AssetTypeConfig {
+  id: string;
+  label: string;
+  description: string;
+  width: string;   // CSS inches e.g. "3.5in"
+  height: string;
+  /** Pixel dimensions at 96dpi for on-screen preview */
+  previewWidth: number;
+  previewHeight: number;
+  /** Aspect ratio CSS value e.g. "1.75/1" */
+  aspect: string;
+  templates: AssetTemplate[];
+  fields: AssetField[];
+}
+
+// ---------------------------------------------------------------------------
+// Registry
+// ---------------------------------------------------------------------------
+
+export const ASSET_TYPES: AssetTypeConfig[] = [
+  {
+    id: "business-card",
+    label: "Business Cards",
+    description: "US Standard 3.5\" × 2\"",
+    width: "3.5in",
+    height: "2in",
+    previewWidth: 336,   // 3.5 * 96
+    previewHeight: 192,  // 2 * 96
+    aspect: "1.75/1",
+    templates: [
+      { id: "light", name: "Light", description: "Clean light background" },
+      { id: "dark", name: "Dark", description: "Bold dark background" },
+      { id: "light-es", name: "Light (ES)", description: "Light background, Spanish" },
+      { id: "dark-es", name: "Dark (ES)", description: "Dark background, Spanish" },
+    ],
+    fields: [
+      { key: "name", label: "Name", placeholder: "John Smith", required: true },
+      { key: "title", label: "Title", placeholder: "Software Engineer" },
+      { key: "email", label: "Email", placeholder: "contact@company.com", type: "email" },
+      { key: "phone", label: "Phone", placeholder: "+1 (555) 123-4567", type: "tel" },
+      { key: "tagline", label: "Tagline", placeholder: "Your company tagline" },
+    ],
+  },
+  {
+    id: "envelope",
+    label: "Envelopes",
+    description: "#10 Envelope 9.5\" × 4.125\"",
+    width: "9.5in",
+    height: "4.125in",
+    previewWidth: 912,   // 9.5 * 96
+    previewHeight: 396,  // 4.125 * 96
+    aspect: "9.5/4.125",
+    templates: [
+      { id: "light", name: "Light", description: "Classic light envelope" },
+      { id: "dark", name: "Dark", description: "Modern dark envelope" },
+      { id: "light-es", name: "Light (ES)", description: "Light envelope, Spanish" },
+      { id: "dark-es", name: "Dark (ES)", description: "Dark envelope, Spanish" },
+    ],
+    fields: [
+      { key: "fromName", label: "From Name", placeholder: "Company Name", required: true },
+      { key: "fromAddress", label: "From Address", placeholder: "123 Main St, City, ST 12345" },
+      { key: "toName", label: "To Name", placeholder: "Recipient Name", required: true },
+      { key: "toAddress", label: "To Address", placeholder: "456 Oak Ave, City, ST 67890" },
+    ],
+  },
+  {
+    id: "sticker",
+    label: "Stickers",
+    description: "3\" × 2.5\" Rectangle",
+    width: "3in",
+    height: "2.5in",
+    previewWidth: 288,   // 3 * 96
+    previewHeight: 240,  // 2.5 * 96
+    aspect: "3/2.5",
+    templates: [
+      { id: "light", name: "Light", description: "White background sticker" },
+      { id: "dark", name: "Dark", description: "Dark background sticker" },
+      { id: "light-es", name: "Light (ES)", description: "White sticker, Spanish" },
+      { id: "dark-es", name: "Dark (ES)", description: "Dark sticker, Spanish" },
+    ],
+    fields: [],
+  },
+];
+
+export function getAssetType(id: string): AssetTypeConfig | undefined {
+  return ASSET_TYPES.find((a) => a.id === id);
+}
