@@ -95,6 +95,29 @@ export const ASSET_TYPES: AssetTypeConfig[] = [
       { key: "phone", label: "Phone", placeholder: "+1 (555) 123-4567", type: "tel" as const, readonly: true, hint: "Edit in Branding → Company Info" },
     ],
   },
+  {
+    id: "google-review",
+    label: "Google Review Cards",
+    description: "3.5\" × 2\" · Double-Sided",
+    width: "3.5in",
+    height: "2in",
+    previewWidth: 336,
+    previewHeight: 192,
+    aspect: "1.75/1",
+    templates: [
+      { id: "light",    name: "English", description: "Rate us on Google (English)" },
+      { id: "light-es", name: "Spanish", description: "Califícanos en Google (Español)" },
+    ],
+    fields: [
+      {
+        key: "googleUrl",
+        label: "Google Review Link",
+        placeholder: "https://g.page/r/your-review-id",
+        required: true,
+        hint: "Find this in your Google Business Profile → Get more reviews",
+      },
+    ],
+  },
 ];
 
 export function getAssetType(id: string): AssetTypeConfig | undefined {

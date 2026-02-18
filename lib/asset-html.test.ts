@@ -292,11 +292,11 @@ describe("business-card back social icons", () => {
     expect(html).toContain("FIND US ON");
   });
 
-  it("includes Facebook, Instagram, YouTube colors on the back", () => {
+  it("includes Facebook and Instagram colors on the back", () => {
     const html = generateAssetHTML({ ...baseOpts(BUSINESS_CARD, "light", {}), page: "back" });
     expect(html).toContain("#1877F2"); // Facebook blue
     expect(html).toContain("#E4405F"); // Instagram pink
-    expect(html).toContain("#FF0000"); // YouTube red
+    expect(html).not.toContain("#FF0000"); // YouTube removed
   });
 
   it("shows QR layout when website is provided", () => {

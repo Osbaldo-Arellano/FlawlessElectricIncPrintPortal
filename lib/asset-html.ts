@@ -162,7 +162,6 @@ function assets(opts: GenerateOptions) {
 // Social icons (colored, print-safe inline SVG)
 const FB_ICON  = `<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#1877F2"/><path d="M13.5 8H12a.5.5 0 0 0-.5.5V10h2l-.3 2H11.5v6h-2v-6H8V10h1.5V8.5A2.5 2.5 0 0 1 12 6h1.5v2z" fill="#fff"/></svg>`;
 const IG_ICON  = `<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#E4405F"/><rect x="6" y="6" width="12" height="12" rx="3" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="3" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="16.5" cy="7.5" r="1" fill="#fff"/></svg>`;
-const YT_ICON  = `<svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#FF0000"/><path d="M10 9l6 3-6 3V9z" fill="#fff"/></svg>`;
 
 // ---------------------------------------------------------------------------
 // BUSINESS CARDS
@@ -245,7 +244,7 @@ function businessCard(templateId: string): GenFn {
             <div>
               <div class="divider"></div>
               <div class="find-us">FIND US ON</div>
-              <div class="social-row">${FB_ICON}${IG_ICON}${YT_ICON}</div>
+              <div class="social-row">${FB_ICON}${IG_ICON}</div>
             </div>
           </div>
         </div>`
@@ -254,7 +253,7 @@ function businessCard(templateId: string): GenFn {
           <div class="b-tag">${esc(tagline)}</div>
           <div class="divider"></div>
           <div class="find-us">FIND US ON</div>
-          <div class="social-row">${FB_ICON}${IG_ICON}${YT_ICON}</div>
+          <div class="social-row">${FB_ICON}${IG_ICON}</div>
         </div>`;
 
     if (page === "front") return wrapWithFont(asset.width, asset.height, c.bg, css, frontHTML);
@@ -265,6 +264,91 @@ function businessCard(templateId: string): GenFn {
 
 reg("business-card", "light", businessCard("light"));
 reg("business-card", "light-es", businessCard("light-es"));
+
+// ---------------------------------------------------------------------------
+// GOOGLE REVIEW CARDS
+// Double-sided: front = brand zone + star CTA, back = hero QR + stars + logo
+// ---------------------------------------------------------------------------
+
+// Google-brand star color
+const STAR_COLOR = "#FBBC05";
+
+function googleReviewCard(templateId: string): GenFn {
+  return (opts) => {
+    const { asset, fields, page } = opts;
+    const { c } = themeFor(templateId);
+    const { logoSrc } = assets(opts);
+    const isEs = templateId.endsWith("-es");
+
+    // Copy strings
+    const headline  = isEs ? "¿Cómo fue su experiencia?"              : "How Did We Do?";
+    const subhead   = isEs ? "Nos encantaría tu opinión en Google"     : "We'd love your feedback on Google";
+    const flipHint  = isEs ? "Dale la vuelta y escanea para dejar una reseña" : "Flip over & scan to leave a review";
+    const backLabel = isEs ? "CALIFÍCANOS EN GOOGLE"                   : "RATE US ON GOOGLE";
+
+    const googleUrl = fields.googleUrl || "";
+    const qr = googleUrl ? qrSvg(googleUrl) : "";
+
+    // Back instruction (actionable, replaces the redundant label + logo)
+    const scanText = isEs ? "Escanea para calificarnos en Google" : "Scan to rate us on Google";
+
+    const css = `
+      /* ── Front ── */
+      /* Three zones: brand top, star+CTA middle (flex-1 centered), flip-hint bottom */
+      .gr-card { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; justify-content:space-between; padding:20px; page-break-after:always; }
+      .gr-brand { display:flex; flex-direction:column; align-items:flex-start; }
+      .gr-accent { width:28px; height:3px; background:#000000; margin-top:5px; }
+      /* CTA zone — column, centered. Margin on individual elements controls hierarchy spacing:
+         stars → headline gets 8 px (cross-group), headline → subhead gets 3 px (within-group) */
+      .gr-cta { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+      .gr-stars { color:${STAR_COLOR}; font-size:22px; letter-spacing:2px; line-height:1; }
+      .gr-headline { font-size:12px; font-weight:800; letter-spacing:0.04em; color:${c.name}; margin-top:8px; }
+      .gr-subhead  { font-size:9px;  font-weight:400; color:${c.secondary}; margin-top:3px; }
+      /* Flip hint — 8 px minimum for readable print, anchors to bottom */
+      .gr-hint { font-size:8px; font-weight:400; color:${c.muted}; text-align:center; }
+
+      /* ── Back ── */
+      /* Three elements only — stars prime the action, QR is the hero, text confirms.
+         Math: 14 + 8 + 106 + 8 + 10 = 146 px in 152 px content area (20 px padding). */
+      .gr-back { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; }
+      /* Stars above QR prime the "I'm rating something" mindset before the action */
+      .gr-back-stars { color:${STAR_COLOR}; font-size:14px; letter-spacing:2px; line-height:1; }
+      /* QR is the hero — sized to dominate without overflowing */
+      .gr-qr { width:106px; height:106px; }
+      .gr-qr svg { width:100%; height:100%; display:block; }
+      /* Brief instruction below QR confirms the action */
+      .gr-scan-text { font-size:8px; font-weight:500; color:${c.secondary}; text-align:center; }
+    `;
+
+    const frontHTML = `<div class="gr-card">
+      <div class="gr-brand">
+        ${logoImg(logoSrc, "32px", "130px")}
+        <div class="gr-accent"></div>
+      </div>
+      <div class="gr-cta">
+        <div class="gr-stars">★★★★★</div>
+        <div class="gr-headline">${headline}</div>
+        <div class="gr-subhead">${subhead}</div>
+      </div>
+      <div class="gr-hint">${flipHint}</div>
+    </div>`;
+
+    const qrPlaceholder = `<div style="width:106px;height:106px;border:1.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:8px;color:#aaa;text-align:center;line-height:1.4;">Enter Google<br>Review Link</div>`;
+
+    const backHTML = `<div class="gr-back">
+      <div class="gr-back-stars">★★★★★</div>
+      <div class="gr-qr">${qr || qrPlaceholder}</div>
+      <div class="gr-scan-text">${scanText}</div>
+    </div>`;
+
+    if (page === "front") return wrapWithFont(asset.width, asset.height, c.bg, css, frontHTML);
+    if (page === "back")  return wrapWithFont(asset.width, asset.height, c.bg, css, backHTML);
+    return wrapWithFont(asset.width, asset.height, c.bg, css, frontHTML + backHTML);
+  };
+}
+
+reg("google-review", "light",    googleReviewCard("light"));
+reg("google-review", "light-es", googleReviewCard("light-es"));
 
 // ---------------------------------------------------------------------------
 // ENVELOPES

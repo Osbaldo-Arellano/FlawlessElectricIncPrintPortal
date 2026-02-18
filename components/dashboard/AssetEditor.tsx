@@ -52,7 +52,7 @@ export function AssetEditor({ open, onClose, asset, template, brand }: AssetEdit
   }, [open, asset, brand]);
 
   // Live preview HTML — for business cards, generate front & back separately for the preview
-  const hasBack = asset.id === "business-card";
+  const hasBack = asset.id === "business-card" || asset.id === "google-review";
 
   const previewHTML = useMemo(
     () =>
