@@ -238,7 +238,7 @@ function businessCard(templateId: string): GenFn {
       /* align-self:stretch fills the content height regardless of parent align-items */
       .back .brand-col { flex:1; display:flex; flex-direction:column; justify-content:space-between; align-self:stretch; }
       .back .b-logo { max-height:36px; max-width:170px; object-fit:contain; }
-      .back .b-tag { font-size:9px; font-weight:400; color:${c.secondary}; margin-top:3px; }
+      .back .b-tag { font-size:9px; font-weight:500; color:${c.secondary}; margin-top:3px; }
       .back .divider { height:1px; background:${c.rule}; margin:6px 0; }
       .back .find-us { font-size:7px; font-weight:800; color:${c.muted}; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:5px; }
       .back .social-row { display:flex; gap:6px; align-items:center; }
@@ -246,7 +246,7 @@ function businessCard(templateId: string): GenFn {
       /* ── Back (no QR — centered fallback) ── */
       .back-center { width:${asset.width}; height:${asset.height}; background:${c.bg}; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:20px; }
       .back-center .b-logo { max-height:44px; max-width:240px; object-fit:contain; }
-      .back-center .b-tag { font-size:9px; font-weight:400; color:${c.secondary}; }
+      .back-center .b-tag { font-size:9px; font-weight:500; color:${c.secondary}; }
       .back-center .divider { width:56%; height:1px; background:${c.rule}; margin:3px 0; }
       .back-center .find-us { font-size:7px; font-weight:800; color:${c.muted}; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:3px; }
       .back-center .social-row { display:flex; gap:6px; align-items:center; }
@@ -262,7 +262,7 @@ function businessCard(templateId: string): GenFn {
         <div class="info">
           <div class="name">${esc(fields.name || "")}</div>
           <div class="sub">${esc(fields.title || "")}</div>
-          <div class="contact"><p>${esc(fields.email || "")}</p><p>${esc(fields.phone || "")}</p></div>
+          <div class="contact"><p style="font-style:italic">${esc(fields.email || "")}</p><p style="font-weight:500">${esc(fields.phone || "")}</p></div>
         </div>
         <img src="${iconSrc}" alt="Icon" class="front-icon">
       </div>

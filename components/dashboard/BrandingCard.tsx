@@ -149,34 +149,50 @@ export function BrandingCard({ brand, onUpdate, dirty, saving, onSave }: Brandin
 
             <div className="space-y-2">
               {brand.social_links.map((link, i) => (
-                <div key={i} className="grid grid-cols-[130px_1fr_1fr_32px] items-center gap-2">
-                  <select
-                    value={link.platform}
-                    onChange={(e) => updateSocialLink(i, { platform: e.target.value })}
-                    className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-2 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none"
-                  >
-                    {SOCIAL_PLATFORMS.map((p) => (
-                      <option key={p} value={p}>
-                        {p.charAt(0).toUpperCase() + p.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    value={link.handle}
-                    onChange={(e) => updateSocialLink(i, { handle: e.target.value })}
-                    placeholder="@handle"
-                    className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    value={link.url}
-                    onChange={(e) => updateSocialLink(i, { url: e.target.value })}
-                    placeholder="https://..."
-                    className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+                <div key={i} className="space-y-1.5 rounded-md border border-zinc-800 p-2 sm:border-0 sm:p-0 sm:space-y-0 sm:grid sm:grid-cols-[130px_1fr_1fr_32px] sm:items-center sm:gap-2">
+                  {/* Row 1 on mobile: platform select + delete button */}
+                  <div className="flex items-center gap-2 sm:contents">
+                    <select
+                      value={link.platform}
+                      onChange={(e) => updateSocialLink(i, { platform: e.target.value })}
+                      className="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-2 py-2 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none sm:flex-none"
+                    >
+                      {SOCIAL_PLATFORMS.map((p) => (
+                        <option key={p} value={p}>
+                          {p.charAt(0).toUpperCase() + p.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => removeSocialLink(i)}
+                      className="flex items-center justify-center rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-red-400 sm:hidden"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  {/* Row 2 on mobile: handle + URL side by side */}
+                  <div className="grid grid-cols-2 gap-2 sm:contents">
+                    <input
+                      value={link.handle}
+                      onChange={(e) => updateSocialLink(i, { handle: e.target.value })}
+                      placeholder="@handle"
+                      className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <input
+                      value={link.url}
+                      onChange={(e) => updateSocialLink(i, { url: e.target.value })}
+                      placeholder="https://..."
+                      className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  {/* Delete button — desktop only */}
                   <button
                     type="button"
                     onClick={() => removeSocialLink(i)}
-                    className="flex items-center justify-center rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"
+                    className="hidden sm:flex items-center justify-center rounded-md p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
