@@ -9,12 +9,16 @@ export async function proxy(request: NextRequest) {
 
   const auth0 = new Auth0Client({ appBaseUrl, logoutStrategy: "v2" });
 
-  const authResponse = await auth0.middleware(request);
+  const { pathname } = request.nextUrl;
 
-  if (request.nextUrl.pathname.startsWith("/auth/")) {
-    return authResponse;
+  // Let Auth0 handle its own routes (/login, /auth/callback, /auth/logout)
+  // and don't session-check them — otherwise /login loops forever
+  if (pathname === "/login" || pathname.startsWith("/auth/")) {
+    return await auth0.middleware(request);
   }
 
+  // For all other routes: check session, redirect to /login if not authenticated
+  const authResponse = await auth0.middleware(request);
   const session = await auth0.getSession(request);
 
   if (!session) {
